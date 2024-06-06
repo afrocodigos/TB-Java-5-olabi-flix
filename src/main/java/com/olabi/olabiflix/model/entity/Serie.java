@@ -18,12 +18,13 @@ public class Serie {
 
     private String totalSeasons;
 
+    @ElementCollection
     private List<String> genre;
-
+    @ElementCollection
     private List<String> writers;
 
     private String poster;
-
+    @ElementCollection
     private List<String> actors;
 
     // Indica que o campo ratings é uma instância de uma classe embutida, Ratings,
