@@ -66,10 +66,19 @@ public class SerieController {
         Serie serie = serieEncontrada.get();
         Ratings avaliacao = serie.getRatings();
 
-        //jeito simples
-        Integer likesAtuais = Integer.parseInt(avaliacao.getLikes());
-        Integer like = likesAtuais + 1;
-        avaliacao.setLikes(String.valueOf(like));
+        if(avaliacao != null){
+            String likes = avaliacao.getLikes();
+            //TERNARIO
+            //CONDICAO ? VALOR DE VDD : VALOR SE FALSO
+            Integer likesAtuais = (likes != null) ? Integer.parseInt(likes) : 0;
+            Integer like = likesAtuais + 1;
+            avaliacao.setLikes(String.valueOf(like));
+        } else {
+            serie.setRatings( new Ratings("0", "1"));
+        }
+
+
+
 
         return  ResponseEntity.ok(repository.save(serie));
 

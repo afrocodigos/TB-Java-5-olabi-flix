@@ -1,24 +1,26 @@
 package com.olabi.olabiflix.model.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 // @Entity Para criar tabela
 @Entity
 // @Table para definir nome da tabela *não obrigatório
-@Table(name = "filme")
+@Table(
+        name = "filme",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"title", "releaseYear", "director", "writer"})
+)
 public class Filme {
 
-    // Campo ID chave primária
     @Id
-    @UuidGenerator // Annotation específica para este caso de UUID
+    @UuidGenerator
     private UUID id;
 
-    // Poderiamos usar também a annotation @Column para dar nome ao campo/coluna da tabela
-    // *Não obrigatório
-    // @Column(name = "titulo")
     private String title;
 
     private String releaseYear;
@@ -45,8 +47,14 @@ public class Filme {
 
     private String awards;
 
-    // Hibernate requer um construtor sem argumentos
-    // para instanciar a entidade durante operações de persistência no banco
+    @CreationTimestamp
+    @Column(updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
+
+
     protected Filme() {}
 
     // Construtor sem o campo 'id' pois será gerado automaticamente

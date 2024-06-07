@@ -17,4 +17,6 @@ public interface FilmeRepository extends JpaRepository<Filme, UUID> {
 
     List<Filme> findByTitleOrActors(String title, String actors);
 
+    boolean existsByTitleAndReleaseYearAndDirectorAndWriter(String title, String releaseYear, String director, String writer);
+
 }
