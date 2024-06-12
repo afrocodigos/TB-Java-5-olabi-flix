@@ -1,6 +1,9 @@
 package com.olabi.olabiflix.model.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.UuidGenerator;
@@ -20,9 +23,14 @@ public class Filme {
     @Id
     @UuidGenerator
     private UUID id;
-
+    @NotBlank(message = "Title não pode ser vazio")
+    @Size(max = 225)
+    @Column(nullable = false)
     private String title;
 
+    @NotBlank(message = "releaseYear não pode ser vazio")
+    @Pattern(regexp = "^\\d{4}$", message = "releaseYear precisa ser um numero de 4 digitos" )
+    @Column(nullable = false)
     private String releaseYear;
 
     private String rated;
@@ -33,8 +41,14 @@ public class Filme {
 
     private String genre;
 
+    @NotBlank(message = "director não pode ser vazio")
+    @Size(max = 225)
+    @Column(nullable = false)
     private String director;
 
+    @NotBlank(message = "writer não pode ser vazio")
+    @Size(max = 225)
+    @Column(nullable = false)
     private String writer;
 
     private String actors;

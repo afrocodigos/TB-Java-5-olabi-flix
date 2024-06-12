@@ -3,6 +3,7 @@ package com.olabi.olabiflix.controller;
 import com.olabi.olabiflix.exception.FilmeException;
 import com.olabi.olabiflix.model.entity.Filme;
 import com.olabi.olabiflix.repository.FilmeRepository;
+import com.olabi.olabiflix.service.FilmeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -23,18 +24,34 @@ public class FilmeController {
 
     private final FilmeRepository repository;
 
-    public FilmeController(FilmeRepository repository) {
+    private final FilmeService service;
+
+    public FilmeController(FilmeRepository repository, FilmeService service) {
         this.repository = repository;
+        this.service = service;
     }
 
     @GetMapping
-    public List<Filme> getFilmes(){
-        return repository.findAll();
+    public ResponseEntity<List<Filme>> getFilmes(){
+        try {
+            List<Filme> filmes = service.getAll();
+            return ResponseEntity.ok(filmes);
+
+        } catch (Exception e){
+            log.error("Erro ao buscar os filmes");
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @GetMapping("/{id}")
-    public Optional<Filme> getById(@PathVariable UUID id){
-        return repository.findById(id);
+    public ResponseEntity<Filme> getById(@PathVariable UUID id){
+        Optional<Filme> filme = repository.findById(id);
+
+        if(filme.isPresent()){
+            return ResponseEntity.ok(filme.get());
+        } else{
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 
 // solucao sem  mudar o tipo
@@ -61,18 +78,12 @@ public class FilmeController {
 
     @PostMapping("/criar")
     public ResponseEntity<Object> create(@RequestBody Filme filmeBody){
-
-        boolean filmeExiste = repository.existsByTitleAndReleaseYearAndDirectorAndWriter(
-                filmeBody.getTitle(), filmeBody.getReleaseYear(), filmeBody.getDirector(), filmeBody.getWriter()
-        );
-
-        if (filmeExiste){
-            //throw new FilmeException.DuplicateFilmeException();
-            String mensagemErro = new FilmeException.DuplicateFilmeException().getMessage();
-            return  new ResponseEntity<>(mensagemErro, HttpStatus.CONFLICT);
+        try {
+            Filme filme = service.create(filmeBody);
+            return ResponseEntity.status(HttpStatus.CREATED).body(filme);
+        }catch (FilmeException.DuplicateFilmeException e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
         }
-
-        return ResponseEntity.ok(repository.save(filmeBody));
     }
 
     @DeleteMapping("/{id}/delete")
@@ -82,37 +93,14 @@ public class FilmeController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Filme> put(@PathVariable UUID id, @RequestBody Filme filmeBody){
-        Optional<Filme> filmeEncontrado = repository.findById(id);
-        //log.info(String.valueOf(filmeEncontrado));
+    public ResponseEntity<Object> put(@PathVariable UUID id, @RequestBody Filme filmeBody){
 
-        if(filmeEncontrado.isEmpty()){
-            return  new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        try{
+            Filme filme = service.update(id, filmeBody);
+            return ResponseEntity.ok(filme);
+        } catch (FilmeException.FilmNotFoundException e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
-
-        Filme filme = filmeEncontrado.get();
-        //log.info(String.valueOf(filme));
-
-        //atualizacao de tudo, campo por campo
-        //qualquer campo que for omitido, no json da requisicao, vai ser cadastrado como nulo
-
-        filme.setTitle(filmeBody.getTitle());
-        filme.setReleaseYear(filmeBody.getReleaseYear());
-        filme.setRated(filmeBody.getRated());
-        filme.setReleased(filmeBody.getReleased());
-        filme.setRuntime(filmeBody.getRuntime());
-        filme.setGenre(filmeBody.getGenre());
-        filme.setDirector(filmeBody.getDirector());
-        filme.setWriter(filmeBody.getWriter());
-        filme.setActors(filmeBody.getActors());
-        filme.setPlot(filmeBody.getPlot());
-        filme.setLanguage(filmeBody.getLanguage());
-        filme.setCountry(filmeBody.getCountry());
-        filme.setAwards(filmeBody.getAwards());
-
-        Filme filmeAtualizado = repository.save(filme);
-
-        return ResponseEntity.ok(filmeAtualizado);
     }
 
     @PatchMapping("/{id}")
