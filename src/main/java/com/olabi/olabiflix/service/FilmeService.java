@@ -11,7 +11,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.lang.reflect.Field;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -66,4 +68,24 @@ public class FilmeService {
         return repository.save(filme);
     }
 
+    public Filme patch(UUID id, Map<String, String> requestBody) throws IllegalAccessException{
+        Filme filme  = repository.findById(id)
+                .orElseThrow(()-> new FilmeException.FilmNotFoundException("Filme não encontrado com id: "+ id));
+
+        //lista dos campos da minha model
+        List<Field> camposDaModel = List.of(filme.getClass().getDeclaredFields());
+
+        for(Field campo : camposDaModel){
+            //tirando o privado
+            campo.setAccessible(true);
+            String nomeCampo = campo.getName();
+
+            if(requestBody.containsKey(nomeCampo)){
+                //log.info(nomeCampo);
+                String atualizacaoRequest = requestBody.get(nomeCampo);
+                campo.set(filme, atualizacaoRequest);
+            }
+        }
+        return repository.save(filme);
+    }
 }

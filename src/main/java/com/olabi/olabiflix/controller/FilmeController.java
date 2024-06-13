@@ -94,7 +94,6 @@ public class FilmeController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Object> put(@PathVariable UUID id, @RequestBody Filme filmeBody){
-
         try{
             Filme filme = service.update(id, filmeBody);
             return ResponseEntity.ok(filme);
@@ -104,35 +103,20 @@ public class FilmeController {
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<Filme> patch(@PathVariable UUID id, @RequestBody Map<String, String> requestBody) throws IllegalAccessException {
-        Optional<Filme> filmeEncontrado = repository.findById(id);
-        //log.info(String.valueOf(filmeEncontrado));
+    public ResponseEntity<Object> patch(@PathVariable UUID id, @RequestBody Map<String, String> requestBody) throws IllegalAccessException {
 
-        if(filmeEncontrado.isEmpty()){
-            return  new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        try{
+            Filme filmeAtualizado = service.patch(id, requestBody);
+            return ResponseEntity.ok(filmeAtualizado);
+        }catch (FilmeException.FilmNotFoundException e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        }catch (IllegalAccessException e){
+            log.error("Erro de acesso ilegal ao atualizar filme: ", e);
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        } catch (Exception e){
+            log.error("Erro ao atualizar o filme", e);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
-
-        Filme filme = filmeEncontrado.get();
-
-        //lista dos campos da minha model
-        List<Field> camposDaModel = List.of(filme.getClass().getDeclaredFields());
-
-        //log.info(String.valueOf(camposDaModel));
-
-        for(Field campo : camposDaModel){
-            //tirando o privado
-            campo.setAccessible(true);
-            String nomeCampo = campo.getName();
-
-            if(requestBody.containsKey(nomeCampo)){
-                //log.info(nomeCampo);
-                String atualizacaoRequest = requestBody.get(nomeCampo);
-                campo.set(filme, atualizacaoRequest);
-            }
-        }
-
-        repository.save(filme);
-        return ResponseEntity.ok(filme);
 
     }
 
